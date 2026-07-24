@@ -747,7 +747,16 @@ function updateCartQty(idx, delta) {
 
   const newQty = item.quantity + delta
   if (newQty <= 0) {
-    cart.splice(idx, 1)
+    showConfirmModal(
+      'Hapus Item?',
+      `Apakah Anda yakin ingin menghapus "${item.product_name}" dari keranjang?`,
+      'fas fa-trash-alt',
+      () => {
+        cart.splice(idx, 1)
+        updateCartUI()
+        renderProducts()
+      }
+    )
   } else {
     const product = getLiveProduct(item.product_id)
     const maxStock = Number(product?.stock ?? 0)
@@ -757,10 +766,9 @@ function updateCartQty(idx, delta) {
     }
     item.quantity = newQty
     item.subtotal = item.quantity * item.price
+    updateCartUI()
+    renderProducts()
   }
-
-  updateCartUI()
-  renderProducts()
 }
 
 function clearCart() {
@@ -1095,7 +1103,27 @@ function bindPOSEvents() {
   document.getElementById('barcodeCameraSelect')?.addEventListener('change', (e) => startScanning(e.target.value))
 
   document.getElementById('clearCartBtn')?.addEventListener('click', () => {
-    if (cart.length > 0 && confirm('Yakin ingin menghapus semua pesanan?')) clearCart()
+    if (cart.length > 0) {
+      showConfirmModal(
+        'Kosongkan Keranjang?',
+        'Apakah Anda yakin ingin menghapus semua pesanan di keranjang?',
+        'fas fa-trash-alt',
+        () => {
+          clearCart()
+        }
+      )
+    }
+  })
+
+  document.getElementById('confirmModalCancelBtn')?.addEventListener('click', closeConfirmModal)
+  document.getElementById('confirmModalConfirmBtn')?.addEventListener('click', () => {
+    if (confirmModalCallback) {
+      confirmModalCallback()
+    }
+    closeConfirmModal()
+  })
+  document.getElementById('confirmModal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeConfirmModal()
   })
 
   document.getElementById('bottomNavCartBtn')?.addEventListener('click', openMobileCart)
@@ -1360,6 +1388,45 @@ function handleScannedBarcode(barcode) {
   } else {
     showToast(`Produk dengan barcode "${barcodeStr}" tidak ditemukan`, 'error')
   }
+}
+
+let confirmModalCallback = null
+
+function showConfirmModal(title, message, iconClass, onConfirm) {
+  const modal = document.getElementById('confirmModal')
+  const content = document.getElementById('confirmModalContent')
+  const titleEl = document.getElementById('confirmModalTitle')
+  const msgEl = document.getElementById('confirmModalMessage')
+  const iconEl = document.getElementById('confirmModalIcon')
+  
+  if (!modal || !content) return
+
+  if (title) titleEl.textContent = title
+  if (message) msgEl.textContent = message
+  if (iconClass && iconEl) {
+    iconEl.className = `${iconClass} text-4xl text-red-500`
+  }
+
+  confirmModalCallback = onConfirm
+
+  modal.classList.remove('hidden')
+  setTimeout(() => {
+    modal.classList.remove('opacity-0')
+    content.classList.remove('scale-95', 'opacity-0')
+  }, 10)
+}
+
+function closeConfirmModal() {
+  const modal = document.getElementById('confirmModal')
+  const content = document.getElementById('confirmModalContent')
+  if (!modal || !content) return
+
+  content.classList.add('scale-95', 'opacity-0')
+  modal.classList.add('opacity-0')
+  setTimeout(() => {
+    modal.classList.add('hidden')
+    confirmModalCallback = null
+  }, 300)
 }
 
 window.initPOS = initPOS
