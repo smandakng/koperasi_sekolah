@@ -276,6 +276,27 @@
     </div>
   </div>
 
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/70 z-[75] hidden flex items-center justify-center backdrop-blur-sm px-4 transition-opacity duration-300 opacity-0">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden text-center transform scale-95 opacity-0 transition-all duration-300 border-t-8 border-red-500" id="confirmModalContent">
+      <div class="p-8 pb-6">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i id="confirmModalIcon" class="fas fa-trash-alt text-4xl text-red-500"></i>
+        </div>
+        <h3 id="confirmModalTitle" class="text-2xl font-black text-brand-navy mb-2">Hapus Pesanan?</h3>
+        <p id="confirmModalMessage" class="text-gray-500 text-sm font-semibold mb-6">Apakah Anda yakin ingin menghapus semua pesanan di keranjang?</p>
+        <div class="flex gap-3">
+          <button type="button" id="confirmModalCancelBtn" class="flex-1 py-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-800 font-bold transition-all active:scale-95">
+            Batal
+          </button>
+          <button type="button" id="confirmModalConfirmBtn" class="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-all active:scale-95 shadow-lg shadow-red-500/20">
+            Ya, Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Barcode Scanner Modal -->
   <div id="barcodeScannerModal" class="fixed inset-0 bg-black/80 z-[70] hidden flex items-center justify-center backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col transform scale-95 opacity-0 transition-all duration-300" id="barcodeScannerModalContent">
