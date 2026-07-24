@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Koperasi Sekolah</title>
+    <link rel="icon" type="image/png" href="https://iili.io/B5MMKiX.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts (Quicksand & Plus Jakarta Sans) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        sans: ['"Quicksand"', 'sans-serif'],
+                    },
+                    colors: {
+                        canteen: {
+                            500: '#0284c7',
+                            600: '#0369a1',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'float-delayed': 'float 3s ease-in-out 1.5s infinite',
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
+                        'logo-bounce': 'logoBounceRotate 4s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(15px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        logoBounceRotate: {
+                            '0%, 100%': { transform: 'scale(1) rotate(0deg) translateY(0)' },
+                            '25%': { transform: 'scale(1.05) rotate(5deg) translateY(-3px)' },
+                            '50%': { transform: 'scale(1) rotate(0deg) translateY(0)' },
+                            '75%': { transform: 'scale(1.05) rotate(-5deg) translateY(-3px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body.dots-bg {
+            background-color: #f0f9ff;
+            background-image: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%);
+            background-attachment: fixed;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(2, 132, 199, 0.15);
+        }
+
+        @media (max-width: 640px) and (orientation: portrait) {
+            body {
+                min-height: 100dvh;
+                min-height: -webkit-fill-available;
+            }
+            
+            /* Ketika ada input yang sedang aktif (focus) */
+            body:has(input:focus) {
+                justify-content: flex-start;
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            body:has(input:focus) #bg-decorations {
+                display: none;
+            }
+
+            body:has(input:focus) #view-login {
+                margin-top: 0;
+                margin-bottom: auto;
+            }
+
+            /* Perkecil margin dan logo header saat mengetik agar menghemat ruang */
+            body:has(input:focus) #view-login > div:first-child {
+                margin-bottom: 1rem;
+                transform: scale(0.85);
+                transform-origin: center;
+                transition: all 0.3s ease;
+            }
+            
+            /* Animasi transisi yang halus */
+            #view-login, #view-login > div:first-child {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+</head>
+<body class="dots-bg min-h-[100dvh] flex flex-col justify-between relative overflow-x-hidden antialiased py-6 text-slate-800 font-sans">
+
+    <!-- Decorative Background Emojis -->
+    <div id="bg-decorations" class="contents">
+        <div class="absolute top-10 left-6 text-4xl animate-float opacity-70 select-none">🍞</div>
+        <div class="absolute top-20 right-8 text-4xl animate-float-delayed opacity-70 select-none">🥤</div>
+        <div class="absolute bottom-32 left-10 text-4xl animate-float-delayed opacity-70 select-none">🍕</div>
+        <div class="absolute bottom-20 right-10 text-4xl animate-float opacity-70 select-none">🍱</div>
+    </div>
+
+    <!-- VIEW: LOGIN VIEW -->
+    <div id="view-login" class="w-full max-w-md sm:max-w-lg px-4 sm:px-6 mx-auto my-auto z-10 flex flex-col justify-center font-display">
+
+        <!-- Header / Logo Area -->
+        <div class="flex flex-col items-center mb-8 animate-slide-up">
+            <div class="bg-white p-5 rounded-full shadow-md shadow-sky-100 mb-4 relative animate-logo-bounce">
+                <i data-lucide="chef-hat" class="w-12 h-12 text-canteen-500 relative z-10"></i>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight text-center">Koperasi<span class="text-canteen-500 font-black"> Sekolah</span></h1>
+            <p id="loginMotivation" class="text-slate-500 text-sm sm:text-base mt-2 text-center font-semibold min-h-[1.5em] transition-opacity duration-500">Semangat melayani hari ini!</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="glass-card rounded-[2rem] p-6 sm:p-10 shadow-2xl shadow-sky-100/50 animate-slide-up" style="animation-delay: 0.1s;">
+            <form id="loginForm" class="space-y-5">
+                <!-- Input: NIS / NIP / Username -->
+                <div>
+                    <label for="username" class="block text-sm sm:text-base font-bold text-slate-700 mb-2">NIS / NIP / Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="h-5 sm:h-6 w-5 sm:w-6 text-slate-400"></i>
+                        </div>
+                        <input type="text" id="username" name="username" required autocomplete="username"
+                            class="block w-full pl-12 pr-4 py-3.5 sm:py-4 bg-white border-2 border-sky-100 rounded-2xl text-sm sm:text-base focus:ring-4 focus:ring-sky-100 focus:border-canteen-500 transition-all outline-none text-slate-800 font-semibold"
+                            placeholder="NIS, NIP, atau username kasir">
+                    </div>
+                </div>
+
+                <!-- Input: Password -->
+                <div>
+                    <label for="password" class="block text-sm sm:text-base font-bold text-slate-700 mb-2">Kata Sandi</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="h-5 sm:h-6 w-5 sm:w-6 text-slate-400"></i>
+                        </div>
+                        <input type="password" id="password" name="password" required
+                            class="block w-full pl-12 pr-12 py-3.5 sm:py-4 bg-white border-2 border-sky-100 rounded-2xl text-sm sm:text-base focus:ring-4 focus:ring-sky-100 focus:border-canteen-500 transition-all outline-none text-slate-800 font-semibold"
+                            placeholder="••••••••">
+                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-canteen-500 transition-colors focus:outline-none">
+                            <i data-lucide="eye" id="eyeIcon" class="h-5 sm:h-6 w-5 sm:w-6"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="loginStatus" class="hidden rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 px-4 py-3 text-sm font-semibold mb-4"></div>
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="w-full bg-canteen-500 hover:bg-canteen-600 text-white font-extrabold py-4 sm:py-4.5 rounded-2xl shadow-xl shadow-canteen-500/20 transition-all transform active:scale-[0.98] flex justify-center items-center gap-2 mt-4 text-sm sm:text-base">
+                    <span>Masuk Aplikasi</span>
+                    <i data-lucide="arrow-right" class="w-5 sm:w-6 h-5 sm:h-6"></i>
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center mt-8 text-slate-400 text-xs sm:text-sm font-bold tracking-wider animate-slide-up" style="animation-delay: 0.2s;">
+            © SMAN 2 Kuningan | Developed by arnnon
+        </p>
+    </div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        function initLucide() {
+            if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+                lucide.createIcons()
+            }
+        }
+
+        initLucide()
+
+        const motivations = [
+          'Semangat melayani hari ini!',
+          'Pelayanan ramah, pelanggan senang.',
+          'Kerja jujur, hasil berkah.',
+          'Setiap transaksi, setiap senyuman.',
+          'Disiplin kecil, hasil besar.',
+          'Fokus, teliti, dan cepat tanggap.',
+          'Hari ini lebih baik dari kemarin.',
+          'Sukses dimulai dari langkah kecil.',
+          'Melayani dengan hati, bekerja dengan semangat.',
+          'Jaga stok, jaga kepercayaan.'
+        ]
+
+        const motivationEl = document.getElementById('loginMotivation')
+        let motivationIndex = Math.floor(Math.random() * motivations.length)
+
+        function showNextMotivation() {
+          if (!motivationEl) return
+          motivationEl.style.opacity = '0'
+          setTimeout(() => {
+            motivationIndex = (motivationIndex + 1) % motivations.length
+            motivationEl.textContent = motivations[motivationIndex]
+            motivationEl.style.opacity = '1'
+          }, 400)
+        }
+
+        function setLoginStatus(message = '', type = 'error') {
+          const statusEl = document.getElementById('loginStatus')
+          if (!statusEl) return
+
+          if (!message) {
+            statusEl.classList.add('hidden')
+            return
+          }
+
+          statusEl.textContent = message
+          statusEl.classList.remove('hidden', 'border-slate-200', 'bg-slate-50', 'text-slate-700', 'border-green-200', 'bg-green-50', 'text-green-700', 'border-rose-200', 'bg-rose-50', 'text-rose-700')
+          if (type === 'success') {
+            statusEl.classList.add('border-green-200', 'bg-green-50', 'text-green-700')
+          } else {
+            statusEl.classList.add('border-rose-200', 'bg-rose-50', 'text-rose-700')
+          }
+        }
+
+        if (motivationEl) {
+          motivationEl.textContent = motivations[motivationIndex]
+          setInterval(showNextMotivation, 4000)
+        }
+
+        Auth.init()
+        if (typeof api.loadDbConfigFromDatabase === 'function') {
+          api.loadDbConfigFromDatabase().catch(() => {})
+        }
+        if (Auth.isLoggedIn()) {
+            Auth.redirectToDashboard()
+        }
+
+        const togglePasswordBtn = document.getElementById('togglePassword')
+        const passwordInput = document.getElementById('password')
+        const eyeIcon = document.getElementById('eyeIcon')
+
+        togglePasswordBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.getAttribute('type') === 'password'
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password')
+            eyeIcon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye')
+            initLucide()
+        })
+
+        // Handle back button on mobile devices when input is focused
+        // to prevent exiting the app or navigating away
+        function setupBackbuttonHandler() {
+            // 1. Cordova/Capacitor backbutton event
+            document.addEventListener('backbutton', function (e) {
+                const activeEl = document.activeElement;
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    activeEl.blur();
+                    e.preventDefault();
+                }
+            }, false);
+
+            // 2. Browser History API (for PWA / Chrome / mobile web)
+            const inputs = document.querySelectorAll('#username, #password');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    if (!window.history.state || !window.history.state.keyboardOpen) {
+                        window.history.pushState({ keyboardOpen: true }, '');
+                    }
+                });
+
+                input.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        // Jika ada input lain yang baru saja mendapat fokus, jangan kembali ke state history sebelumnya
+                        const activeEl = document.activeElement;
+                        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                            return;
+                        }
+                        if (window.history.state && window.history.state.keyboardOpen) {
+                            window.history.back();
+                        }
+                    }, 100);
+                });
+            });
+
+            window.addEventListener('popstate', () => {
+                const activeEl = document.activeElement;
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    activeEl.blur();
+                }
+            });
+        }
+        setupBackbuttonHandler()
+
+        const loginForm = document.getElementById('loginForm')
+        const submitBtn = document.getElementById('submitBtn')
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault()
+            const u = document.getElementById('username').value.trim()
+            const p = document.getElementById('password').value.trim()
+
+            setLoginStatus('')
+
+            if (!u || !p) {
+                setLoginStatus('Harap isi semua kolom!', 'error')
+                return
+            }
+
+            const originalBtnContent = submitBtn.innerHTML
+            submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> <span>Membuka portal...</span>'
+            submitBtn.disabled = true
+            submitBtn.classList.add('opacity-80', 'cursor-not-allowed')
+            initLucide()
+
+            const result = await Auth.login(u, p)
+
+            if (result.success) {
+                setLoginStatus('Login berhasil! Mengalihkan...', 'success')
+                setTimeout(() => {
+                    Auth.redirectToDashboard()
+                }, 500)
+            } else {
+                setLoginStatus(result.message, 'error')
+                submitBtn.innerHTML = originalBtnContent
+                submitBtn.disabled = false
+                submitBtn.classList.remove('opacity-80', 'cursor-not-allowed')
+                initLucide()
+            }
+        })
+    </script>
+</body>
+</html>

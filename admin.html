@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin - Koperasi Sekolah</title>
+  <link rel="icon" type="image/png" href="https://iili.io/B5MMKiX.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="admin-layout" id="adminLayout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <button type="button" class="brand-icon" id="sidebarToggle" aria-label="Buka/tutup sidebar" aria-expanded="true" title="Tutup sidebar">
+          <i class="fas fa-store" aria-hidden="true"></i>
+        </button>
+        <div class="sidebar-brand-text">
+          <h2>Admin</h2>
+          <p>Koperasi</p>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" data-page="dashboard" class="active" title="Dashboard"><i class="fas fa-home"></i><span class="nav-label">Dashboard</span></a>
+        <a href="#" data-page="products" title="Produk"><i class="fas fa-box"></i><span class="nav-label">Produk</span></a>
+        <a href="#" data-page="categories" title="Kategori"><i class="fas fa-tags"></i><span class="nav-label">Kategori</span></a>
+        <a href="#" data-page="transactions" title="Transaksi"><i class="fas fa-receipt"></i><span class="nav-label">Transaksi</span></a>
+        
+        <!-- Input Keuangan -->
+        <a href="#" data-page="incomes" title="Input Pemasukan"><i class="fas fa-plus-circle"></i><span class="nav-label">Pemasukan</span></a>
+        <a href="#" data-page="expenses" title="Input Pengeluaran"><i class="fas fa-minus-circle"></i><span class="nav-label">Pengeluaran</span></a>
+
+        <!-- Laporan & Submenu -->
+        <a href="#" data-page="reports" title="Laporan" class="has-submenu"><i class="fas fa-chart-bar"></i><span class="nav-label">Laporan</span></a>
+        <div class="sidebar-submenu" id="reportsSubmenu" style="max-height: 0px;">
+          <a href="#" data-page="reports_income" title="Laporan Pemasukan"><i class="fas fa-chart-line"></i><span class="nav-label">Laporan Pemasukan</span></a>
+          <a href="#" data-page="reports_expense" title="Laporan Pengeluaran"><i class="fas fa-chart-pie"></i><span class="nav-label">Laporan Pengeluaran</span></a>
+          <a href="#" data-page="reports_global" title="Laporan Global"><i class="fas fa-globe"></i><span class="nav-label">Laporan Global</span></a>
+        </div>
+
+        <a href="#" data-page="users" title="Pengguna"><i class="fas fa-users"></i><span class="nav-label">Pengguna</span></a>
+        <a href="#" data-page="members" title="Anggota"><i class="fas fa-id-card"></i><span class="nav-label">Anggota</span></a>
+        <a href="#" data-page="settings" title="Pengaturan"><i class="fas fa-cog"></i><span class="nav-label">Pengaturan</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <button type="button" class="sidebar-logout-btn" onclick="Auth.logout()" title="Keluar">
+          <i class="fas fa-sign-out-alt"></i><span class="nav-label">Keluar</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <img src="https://iili.io/B5MMKiX.png" alt="Logo SMA Negeri 2 Kuningan" class="topbar-logo" width="40" height="40">
+          <div class="topbar-brand">
+            <h1 class="topbar-app-name">Koperasi Sekolah</h1>
+            <p class="topbar-school-name">SMA Negeri 2 Kuningan</p>
+          </div>
+        </div>
+        <div class="header-datetime" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; margin-left: auto; text-align: right; margin-right: 0px;">
+          <span class="date-display" id="dateDisplay" style="font-size: 13px; color: rgba(255,255,255,0.85); white-space: nowrap; line-height: 1.2; text-align: right; display: block; width: 100%; margin: 0;"></span>
+          <span class="time-display" id="timeDisplay" style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 2px; white-space: nowrap; line-height: 1.2; display: flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%; text-align: right; margin: 0;">
+            ⏰ <span id="timeText">00:00:00</span>
+          </span>
+        </div>
+        <div class="topbar-actions">
+          <div class="profile-dropdown" id="profileDropdown">
+            <button type="button" class="profile-toggle" id="profileToggle" aria-label="Menu profil" aria-haspopup="true" aria-expanded="false">
+              <div class="profile-avatar" style="background: transparent; font-size: 24px;">
+                👩‍💼
+              </div>
+              <i class="fas fa-chevron-down profile-arrow"></i>
+            </button>
+            <div class="profile-dropdown-content" id="profileDropdownContent">
+              <a href="#" onclick="showAdminChangePassword()"><i class="fas fa-user-edit"></i> Ganti Password</a>
+              <a href="#" onclick="Auth.logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="page-content" id="pageContent">
+        <!-- Dynamic content loaded here -->
+      </div>
+      <!-- Footer -->
+      <footer class="admin-footer" style="padding: 12px 24px; text-align: center; font-size: 12px; color: var(--text-light); border-top: 1px solid var(--border); background: var(--card); flex-shrink: 0; font-weight: 600; letter-spacing: 0.5px;">
+        © SMAN 2 Kuningan | Developed by arnnon
+      </footer>
+    </main>
+  </div>
+
+  <!-- Bottom Nav (portrait mobile) -->
+  <nav class="admin-bottom-nav" aria-label="Navigasi admin">
+    <a href="#" data-page="dashboard" class="active"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="#" data-page="products"><i class="fas fa-box"></i><span>Produk</span></a>
+    <a href="#" data-page="categories"><i class="fas fa-tags"></i><span>Kategori</span></a>
+    <a href="#" data-page="transactions"><i class="fas fa-receipt"></i><span>Transaksi</span></a>
+    <a href="#" data-page="incomes"><i class="fas fa-plus-circle"></i><span>Masuk</span></a>
+    <a href="#" data-page="expenses"><i class="fas fa-minus-circle"></i><span>Keluar</span></a>
+    <div class="bottom-nav-dropdown">
+      <a href="#" id="bottomNavReportsBtn" data-page="reports"><i class="fas fa-chart-bar"></i><span>Laporan</span></a>
+      <div class="bottom-nav-dropdown-content" id="bottomNavReportsDropdown">
+        <a href="#" data-page="reports_income"><i class="fas fa-chart-line"></i><span>Pemasukan</span></a>
+        <a href="#" data-page="reports_expense"><i class="fas fa-chart-pie"></i><span>Pengeluaran</span></a>
+        <a href="#" data-page="reports_global"><i class="fas fa-globe"></i><span>Global</span></a>
+      </div>
+    </div>
+    <a href="#" data-page="users"><i class="fas fa-users"></i><span>Pengguna</span></a>
+    <a href="#" data-page="members"><i class="fas fa-id-card"></i><span>Anggota</span></a>
+    <a href="#" data-page="settings"><i class="fas fa-cog"></i><span>Setelan</span></a>
+  </nav>
+
+  <script src="js/supabase.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="admin/js/dashboard.js"></script>
+  <script src="admin/js/products.js"></script>
+  <script src="admin/js/transactions.js"></script>
+  <script src="admin/js/incomes.js"></script>
+  <script src="admin/js/expenses.js"></script>
+  <script src="admin/js/reports.js"></script>
+  <script src="admin/js/members.js"></script>
+  <script src="admin/js/settings.js"></script>
+  <script>
+    (function initAdminApp() {
+    if (!Auth.requirePage('admin')) return
+
+    if (typeof api.loadDbConfigFromDatabase === 'function') {
+      api.loadDbConfigFromDatabase().catch(() => {})
+    }
+
+    const dateDisplay = document.getElementById('dateDisplay')
+    dateDisplay.textContent = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: APP_TIMEZONE
+    })
+
+    function updateClock() {
+      const timeDisplay = document.getElementById('timeText')
+      if (timeDisplay) {
+        const now = new Date()
+        timeDisplay.textContent = now.toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZone: APP_TIMEZONE
+        })
+      }
+    }
+    updateClock()
+    setInterval(updateClock, 1000)
+
+
+
+    // Profile Dropdown Toggle
+    const profileDropdown = document.getElementById('profileDropdown')
+    const profileToggle = document.getElementById('profileToggle')
+    if (profileToggle && profileDropdown) {
+      profileToggle.addEventListener('click', (e) => {
+        e.stopPropagation()
+        profileDropdown.classList.toggle('active')
+        const expanded = profileDropdown.classList.contains('active')
+        profileToggle.setAttribute('aria-expanded', expanded)
+      })
+      
+      document.addEventListener('click', (e) => {
+        if (!profileDropdown.contains(e.target)) {
+          profileDropdown.classList.remove('active')
+          profileToggle.setAttribute('aria-expanded', 'false')
+        }
+      })
+    }
+
+    function fitTopbarDate() {
+      if (!window.matchMedia('(orientation: portrait)').matches) {
+        dateDisplay.style.fontSize = ''
+        return
+      }
+      dateDisplay.style.fontSize = ''
+      let size = 11
+      dateDisplay.style.fontSize = size + 'px'
+      while (dateDisplay.scrollWidth > dateDisplay.clientWidth && size > 7.5) {
+        size -= 0.5
+        dateDisplay.style.fontSize = size + 'px'
+      }
+    }
+
+    fitTopbarDate()
+    window.addEventListener('resize', fitTopbarDate)
+    window.addEventListener('orientationchange', () => setTimeout(fitTopbarDate, 100))
+
+    const THEME_KEY = 'waroeng-admin-theme'
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY)
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      applyTheme(saved || (prefersDark ? 'dark' : 'light'))
+    }
+
+    initTheme()
+
+    const SIDEBAR_KEY = 'waroeng-admin-sidebar'
+    const SIDEBAR_ANIM_MS = 420
+    const adminLayout = document.getElementById('adminLayout')
+    const sidebarToggle = document.getElementById('sidebarToggle')
+    let sidebarAnimating = false
+
+    function isDesktopSidebar() {
+      return window.matchMedia('(min-width: 768px)').matches
+    }
+
+    function updateSidebarWidth() {
+      const sidebar = document.getElementById('sidebar')
+      if (!sidebar || !isDesktopSidebar()) {
+        adminLayout.style.removeProperty('--sidebar-width')
+        adminLayout.style.removeProperty('--sidebar-label-max')
+        adminLayout.style.removeProperty('--sidebar-brand-max')
+        return
+      }
+
+      const clone = sidebar.cloneNode(true)
+      clone.removeAttribute('id')
+      clone.setAttribute('aria-hidden', 'true')
+      clone.style.cssText = [
+        'position:fixed',
+        'left:-10000px',
+        'top:0',
+        'visibility:hidden',
+        'pointer-events:none',
+        'height:auto',
+        'width:max-content',
+        'overflow:visible',
+        'z-index:-1'
+      ].join(';')
+
+      clone.querySelectorAll('.nav-label').forEach((el) => {
+        el.style.maxWidth = 'none'
+        el.style.opacity = '1'
+      })
+      const brandText = clone.querySelector('.sidebar-brand-text')
+      if (brandText) brandText.style.maxWidth = 'none'
+      const brandIcon = clone.querySelector('.brand-icon')
+      if (brandIcon) {
+        brandIcon.style.width = '40px'
+        brandIcon.style.minWidth = '40px'
+        brandIcon.style.opacity = '1'
+        brandIcon.style.margin = '0'
+      }
+
+      document.body.appendChild(clone)
+      const measured = Math.ceil(clone.getBoundingClientRect().width)
+      document.body.removeChild(clone)
+
+      let maxLabel = 0
+      sidebar.querySelectorAll('.nav-label').forEach((el) => {
+        maxLabel = Math.max(maxLabel, el.scrollWidth)
+      })
+      const brandBlock = sidebar.querySelector('.sidebar-brand-text')
+      const brandMax = brandBlock ? Math.ceil(brandBlock.scrollWidth) : 0
+
+      const minWidth = 168
+      const maxWidth = Math.min(Math.round(window.innerWidth * 0.38), 360)
+      const width = Math.min(maxWidth, Math.max(minWidth, measured))
+
+      adminLayout.style.setProperty('--sidebar-width', `${width}px`)
+      adminLayout.style.setProperty('--sidebar-label-max', `${maxLabel}px`)
+      adminLayout.style.setProperty('--sidebar-brand-max', `${brandMax}px`)
+    }
+
+    function setSidebarAria(collapsed) {
+      sidebarToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true')
+      sidebarToggle.setAttribute('aria-label', collapsed ? 'Buka sidebar' : 'Tutup sidebar')
+      sidebarToggle.title = collapsed ? 'Buka sidebar' : 'Tutup sidebar'
+    }
+
+    function applySidebarState(collapsed, animate = false) {
+      if (!animate) {
+        adminLayout.classList.remove('sidebar-collapsing', 'sidebar-expanding')
+        adminLayout.classList.toggle('sidebar-collapsed', collapsed)
+        setSidebarAria(collapsed)
+        return
+      }
+
+      sidebarAnimating = true
+      if (collapsed) {
+        adminLayout.classList.add('sidebar-collapsing')
+        setSidebarAria(true)
+        setTimeout(() => {
+          adminLayout.classList.add('sidebar-collapsed')
+          adminLayout.classList.remove('sidebar-collapsing')
+          sidebarAnimating = false
+        }, SIDEBAR_ANIM_MS)
+      } else {
+        adminLayout.classList.remove('sidebar-collapsed')
+        adminLayout.classList.add('sidebar-expanding')
+        setSidebarAria(false)
+        setTimeout(() => {
+          adminLayout.classList.remove('sidebar-expanding')
+          sidebarAnimating = false
+          updateSidebarWidth()
+        }, SIDEBAR_ANIM_MS)
+      }
+    }
+
+    function initSidebarToggle() {
+      updateSidebarWidth()
+
+      const saved = localStorage.getItem(SIDEBAR_KEY)
+      if (saved === 'collapsed' && isDesktopSidebar()) {
+        applySidebarState(true)
+      }
+
+      sidebarToggle.addEventListener('click', () => {
+        if (!isDesktopSidebar() || sidebarAnimating) return
+        const collapsed = !adminLayout.classList.contains('sidebar-collapsed') &&
+          !adminLayout.classList.contains('sidebar-collapsing')
+        applySidebarState(collapsed, true)
+        localStorage.setItem(SIDEBAR_KEY, collapsed ? 'collapsed' : 'expanded')
+      })
+
+      window.addEventListener('resize', () => {
+        if (!isDesktopSidebar()) {
+          adminLayout.classList.remove('sidebar-collapsed', 'sidebar-collapsing', 'sidebar-expanding')
+          sidebarAnimating = false
+          updateSidebarWidth()
+        } else {
+          updateSidebarWidth()
+        }
+      })
+
+      if (document.fonts?.ready) {
+        document.fonts.ready.then(updateSidebarWidth)
+      }
+    }
+
+    initSidebarToggle()
+
+    // Router
+    let currentPage = 'dashboard'
+
+    function navigateTo(page) {
+      if (page === 'reports') {
+        const submenu = document.getElementById('reportsSubmenu')
+        if (submenu) {
+          const isClosed = submenu.style.maxHeight === '0px' || !submenu.style.maxHeight
+          submenu.style.maxHeight = isClosed ? submenu.scrollHeight + 'px' : '0px'
+        }
+        navigateTo('reports_income')
+        return
+      }
+
+      if (page === 'reports_income' || page === 'reports_expense' || page === 'reports_global') {
+        const submenu = document.getElementById('reportsSubmenu')
+        if (submenu) {
+          submenu.style.maxHeight = submenu.scrollHeight + 'px'
+        }
+      } else {
+        const submenu = document.getElementById('reportsSubmenu')
+        if (submenu) {
+          submenu.style.maxHeight = '0px'
+        }
+      }
+
+      if (currentPage === 'dashboard' && page !== 'dashboard' && typeof cancelDashboardRender === 'function') {
+        cancelDashboardRender()
+      }
+      if ((currentPage === 'reports' || currentPage === 'reports_income' || currentPage === 'reports_expense' || currentPage === 'reports_global') && 
+          page !== 'reports' && page !== 'reports_income' && page !== 'reports_expense' && page !== 'reports_global' && 
+          typeof cancelReportsRender === 'function') {
+        cancelReportsRender()
+      }
+      currentPage = page
+      document.querySelectorAll('.sidebar-nav a, .admin-bottom-nav a').forEach(a => {
+        a.classList.toggle('active', a.dataset.page === page)
+      })
+
+      // Close bottom nav dropdown
+      const bottomNavReportsDropdown = document.getElementById('bottomNavReportsDropdown')
+      if (bottomNavReportsDropdown) {
+        bottomNavReportsDropdown.classList.remove('show')
+      }
+      
+      // if submenu item is active, highlight the parent reports link
+      const reportsLink = document.querySelector('.sidebar-nav a[data-page="reports"]')
+      if (reportsLink) {
+        reportsLink.classList.toggle('active', page === 'reports_income' || page === 'reports_expense' || page === 'reports_global')
+      }
+      const reportsBottomNavBtn = document.getElementById('bottomNavReportsBtn')
+      if (reportsBottomNavBtn) {
+        reportsBottomNavBtn.classList.toggle('active', page === 'reports_income' || page === 'reports_expense' || page === 'reports_global')
+      }
+
+      const content = document.getElementById('pageContent')
+
+      switch(page) {
+        case 'dashboard': renderDashboard(content); break
+        case 'products': window._lowStockNotified = false; renderProducts(content); break
+        case 'categories': renderCategories(content); break
+        case 'transactions': renderTransactions(content); break
+        case 'incomes': renderIncomes(content); break
+        case 'expenses': renderExpenses(content); break
+        case 'reports_income': renderReportsIncome(content); break
+        case 'reports_expense': renderReportsExpense(content); break
+        case 'reports_global': renderReportsGlobal(content); break
+        case 'users': renderUsers(content); break
+        case 'members': renderMembers(content); break
+        case 'settings': renderSettings(content); break
+      }
+    }
+
+    document.querySelectorAll('.sidebar-nav a, .admin-bottom-nav a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault()
+        if (a.id === 'bottomNavReportsBtn' && window.matchMedia('(orientation: portrait)').matches) {
+          const dropdown = document.getElementById('bottomNavReportsDropdown')
+          if (dropdown) {
+            dropdown.classList.toggle('show')
+          }
+          return
+        }
+        navigateTo(a.dataset.page)
+      })
+    })
+
+    // Close bottom nav dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('bottomNavReportsDropdown')
+      const reportsBtn = document.getElementById('bottomNavReportsBtn')
+      if (dropdown && reportsBtn && !reportsBtn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('show')
+      }
+    })
+
+    // ========== USERS PAGE ==========
+    async function renderUsers(container) {
+      try {
+        const { data: users, error } = await api.getUsers()
+        if (error) throw error
+        container.innerHTML = `
+          ${adminPageNote('fas fa-users', 'Data Pengguna', 'Pengelolaan akun admin dan kasir yang dapat mengakses sistem Koperasi.')}
+          <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:16px">
+            <button class="btn btn-primary" onclick="showUserModal()"><i class="fas fa-plus"></i> Tambah</button>
+          </div>
+          <div class="products-table-card">
+            <div class="products-table-scroll">
+              <table class="products-data-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th class="col-head-product">Nama</th>
+                    <th>Username</th>
+                    <th class="password-col">Password</th>
+                    <th>WhatsApp</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(users || []).length === 0
+                    ? '<tr><td colspan="8"><div class="empty-state"><div class="icon">👤</div><h3>Belum ada pengguna</h3></div></td></tr>'
+                    : (users || []).map((u, i) => `
+                    <tr>
+                      <td class="col-no">${i + 1}</td>
+                      <td class="col-product">
+                        <div class="product-cell">
+                          <span class="product-thumb" style="background:${u.role === 'admin' ? 'var(--primary)' : 'var(--success)'};color:#fff;border:none">${escapeHtml(u.full_name).charAt(0).toUpperCase()}</span>
+                          <span><strong>${escapeHtml(u.full_name)}</strong></span>
+                        </div>
+                      </td>
+                      <td>${escapeHtml(u.username)}</td>
+                      <td class="password-col">
+                        <div class="password-cell-container">
+                          <span class="password-masked" id="uPwSpan-${u.id}">••••••••</span>
+                          <button class="btn btn-sm btn-outline password-toggle-btn-table" onclick="toggleTablePasswordVisibility('${escapeHtml(u.password)}', 'uPwSpan-${u.id}', this)" style="padding:4px 8px;font-size:12px" title="Tampilkan/Sembunyikan Password">
+                            <i class="fas fa-eye"></i>
+                          </button>
+                        </div>
+                      </td>
+                      <td>${escapeHtml(u.whatsapp || '-')}</td>
+                      <td><span class="badge ${u.role === 'admin' ? 'badge-warning' : 'badge-info'}">${u.role === 'admin' ? '👑 Admin' : '🛒 Kasir'}</span></td>
+                      <td><span class="badge ${u.is_active ? 'badge-success' : 'badge-danger'}">${u.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
+                      <td>
+                        <div class="action-btns">
+                          <button class="btn btn-sm btn-outline" onclick="showUserModal(${u.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                          <button class="btn btn-sm ${u.is_active ? 'btn-primary' : 'btn-success'}" onclick="toggleUserStatus(${u.id}, ${u.is_active})" title="${u.is_active ? 'Nonaktifkan' : 'Aktifkan'}">
+                            <i class="fas ${u.is_active ? 'fa-ban' : 'fa-check'}"></i>
+                          </button>
+                          <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `
+      } catch (err) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><h3>Error</h3><p>${escapeHtml(err.message)}</p></div>`
+      }
+    }
+
+    async function showUserModal(id = null) {
+      const isEdit = id !== null
+      let user = null
+      if (isEdit) {
+        const { data } = await supabaseClient.from('users').select('*').eq('id', id).single()
+        user = data
+        if (!user) {
+          showToast('Pengguna tidak ditemukan', 'error')
+          return
+        }
+      }
+      const overlay = document.createElement('div')
+      overlay.className = 'modal-overlay'
+      overlay.style.display = 'flex'
+      overlay.innerHTML = `
+        <div class="modal modal-lg">
+          ${modalHeader(isEdit ? '✏️' : '👤', isEdit ? 'Edit Pengguna' : 'Tambah Pengguna', isEdit ? 'Perbarui data akun pengguna' : 'Buat akun admin atau kasir baru', isEdit ? 'info' : 'primary')}
+          <div class="modal-body">
+          <form id="userForm">
+            <div class="form-group">
+              <label>Nama Lengkap</label>
+              <input type="text" id="uName" value="${isEdit ? escapeHtml(user.full_name) : ''}" required>
+            </div>
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" id="uUsername" value="${isEdit ? escapeHtml(user.username) : ''}" ${isEdit ? 'readonly' : ''} required>
+            </div>
+            <div class="form-group">
+              <label>Password${isEdit ? ' <span style="font-weight:400;color:var(--text-light)">(kosongkan jika tidak diubah)</span>' : ''}</label>
+              <div class="password-input-container">
+                <input type="password" id="uPassword" ${isEdit ? '' : 'required'} autocomplete="new-password" placeholder="${isEdit ? 'Password baru (opsional)' : ''}">
+                <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('uPassword', this)" tabindex="-1">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <select id="uRole">
+                <option value="kasir" ${isEdit && user.role === 'kasir' ? 'selected' : ''}>🛒 Kasir</option>
+                <option value="admin" ${isEdit && user.role === 'admin' ? 'selected' : ''}>👑 Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Nomor WhatsApp <span style="font-weight:400;color:var(--text-light)">(untuk konfirmasi pesanan siswa/guru)</span></label>
+              <input type="tel" id="uWhatsapp" value="${isEdit ? escapeHtml(user.whatsapp || '') : ''}" placeholder="Contoh: 081234567890" inputmode="numeric">
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">✖️ Batal</button>
+              <button type="submit" class="btn btn-primary">${isEdit ? '💾 Simpan' : '✅ Tambah'}</button>
+            </div>
+          </form>
+          </div>
+        </div>
+      `
+      document.body.appendChild(overlay)
+
+      document.getElementById('userForm').onsubmit = async (e) => {
+        e.preventDefault()
+        const btn = overlay.querySelector('button[type="submit"]')
+        btn.disabled = true
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...'
+
+        if (isEdit) {
+          const data = {
+            full_name: document.getElementById('uName').value,
+            role: document.getElementById('uRole').value,
+            whatsapp: document.getElementById('uWhatsapp').value.trim() || null
+          }
+          const newPassword = document.getElementById('uPassword').value.trim()
+          if (newPassword) data.password = newPassword
+          const { error } = await api.updateUser(id, data)
+          if (error) { showToast('Gagal: ' + error.message, 'error'); btn.disabled = false; btn.innerHTML = 'Simpan'; return }
+        } else {
+          const data = {
+            full_name: document.getElementById('uName').value,
+            username: document.getElementById('uUsername').value,
+            password: document.getElementById('uPassword').value,
+            role: document.getElementById('uRole').value,
+            whatsapp: document.getElementById('uWhatsapp').value.trim() || null
+          }
+          const { error } = await api.addUser(data)
+          if (error) { showToast('Gagal: ' + error.message, 'error'); btn.disabled = false; btn.innerHTML = 'Tambah'; return }
+        }
+        overlay.remove()
+        showToast(isEdit ? 'Pengguna diperbarui' : 'Pengguna ditambahkan', 'success')
+        renderUsers(document.getElementById('pageContent'))
+      }
+    }
+
+    async function toggleUserStatus(id, currentStatus) {
+      if (Number(id) === Number(Auth.getUserId()) && currentStatus) {
+        showToast('Tidak bisa menonaktifkan akun sendiri', 'error')
+        return
+      }
+      const action = currentStatus ? 'nonaktifkan' : 'aktifkan'
+      const confirmText = currentStatus ? 'Nonaktifkan' : 'Aktifkan'
+      const confirmIcon = currentStatus ? '🚫' : '✅'
+      const confirm = await confirmDialog(`Yakin ingin ${action} pengguna ini?`, { confirmText, confirmIcon })
+      if (!confirm) return
+      const { error } = await api.updateUser(id, { is_active: !currentStatus })
+      if (error) { showToast('Gagal: ' + error.message, 'error') }
+      else {
+        showToast(`Pengguna berhasil di${action}`, 'success')
+        renderUsers(document.getElementById('pageContent'))
+      }
+    }
+
+    async function deleteUser(id) {
+      if (Number(id) === Number(Auth.getUserId())) {
+        showToast('Tidak bisa menghapus akun sendiri yang sedang digunakan', 'error')
+        return
+      }
+      const confirm = await confirmDialog('Yakin ingin menghapus pengguna ini secara permanen dari database?')
+      if (!confirm) return
+      const { error } = await api.deleteUser(id)
+      if (error) { showToast('Gagal: ' + error.message, 'error') }
+      else {
+        showToast('Pengguna berhasil dihapus secara permanen', 'success')
+        renderUsers(document.getElementById('pageContent'))
+      }
+    }
+
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId)
+      if (!input) return
+      const isPw = input.type === 'password'
+      input.type = isPw ? 'text' : 'password'
+      const icon = btn.querySelector('i')
+      if (icon) {
+        icon.className = isPw ? 'fas fa-eye-slash' : 'fas fa-eye'
+      }
+    }
+
+    function toggleTablePasswordVisibility(plainText, spanId, btn) {
+      const span = document.getElementById(spanId)
+      if (!span) return
+      const isHidden = span.textContent.includes('••')
+      span.textContent = isHidden ? plainText : '••••••••'
+      const icon = btn.querySelector('i')
+      if (icon) {
+        icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye'
+      }
+    }
+
+    function showAdminChangePassword() {
+      const overlay = document.createElement('div')
+      overlay.className = 'modal-overlay'
+      overlay.style.display = 'flex'
+      overlay.innerHTML = `
+        <div class="modal modal-lg">
+          ${modalHeader('🔐', 'Ganti Password', 'Perbarui kata sandi akun Anda', 'warning')}
+          <div class="modal-body">
+          <form id="changePwForm">
+            <div class="form-group">
+              <label>Password Lama</label>
+              <input type="password" id="oldPassword" required>
+            </div>
+            <div class="form-group">
+              <label>Password Baru</label>
+              <input type="password" id="newPassword" required>
+            </div>
+            <div class="form-group">
+              <label>Konfirmasi Password Baru</label>
+              <input type="password" id="confirmPassword" required>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">✖️ Batal</button>
+              <button type="submit" class="btn btn-primary">💾 Simpan</button>
+            </div>
+          </form>
+          </div>
+        </div>
+      `
+      document.body.appendChild(overlay)
+      document.getElementById('changePwForm').onsubmit = async (e) => {
+        e.preventDefault()
+        const old = document.getElementById('oldPassword').value
+        const newPw = document.getElementById('newPassword').value
+        const confirm = document.getElementById('confirmPassword').value
+        if (newPw !== confirm) {
+          showToast('Konfirmasi password baru tidak cocok', 'error')
+          return
+        }
+        const btn = e.target.querySelector('button[type="submit"]')
+        btn.disabled = true
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...'
+        const result = await Auth.changePassword(old, newPw)
+        if (result.success) {
+          showToast('Password berhasil diubah', 'success')
+          overlay.remove()
+        } else {
+          showToast(result.message || 'Gagal mengubah password', 'error')
+          btn.disabled = false
+          btn.innerHTML = '💾 Simpan'
+        }
+      }
+    }
+
+    window.navigateTo = navigateTo
+    window.showUserModal = showUserModal
+    window.toggleUserStatus = toggleUserStatus
+    window.deleteUser = deleteUser
+    window.togglePasswordVisibility = togglePasswordVisibility
+    window.toggleTablePasswordVisibility = toggleTablePasswordVisibility
+    window.showAdminChangePassword = showAdminChangePassword
+
+    navigateTo('dashboard')
+    })()
+  </script>
+</body>
+</html>
